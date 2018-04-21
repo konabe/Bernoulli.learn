@@ -3,6 +3,9 @@ function beta_func(x, y){
 }
 
 function beta_pdf_each(x, alpha, beta){
+  if(!alpha || !beta || !x){
+    return undefined;
+  }
   return Math.pow(x, alpha-1)*Math.pow(1-x, beta-1)/beta_func(alpha, beta);
 }
 

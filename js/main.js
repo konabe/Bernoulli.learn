@@ -1,12 +1,5 @@
-
-/* generation of data */
-var start = 1;
-var end = 99;
-var res = 100;  // resolution of x axis.
-var x_graph = [];
-for(var i = start; i <= end; i += 1){
-  x_graph.push(i/res);
-}
+var prior_data;
+var domain = getDomain();
 
 /* d3.js setting */
 svgWidth = 800;
@@ -17,13 +10,25 @@ var height = svgHeight - margin.top - margin.bottom;
 var scale = {};
 
 /* prior distribution */
-var alpha = 6;
-var beta = 3;
-var prior_y = beta_pdf(x_graph, alpha, beta);
-var prior_data = x_graph.map(function(ele, ind, arr){
-  prior_ele = {x: ele, y: prior_y[ind]};
-  return prior_ele;
-});
+function getDomain(){
+  var start = 1;
+  var end = 99;
+  var res = 100;  // resolution of x axis.
+  var x_graph = [];
+  for(var i = start; i <= end; i += 1){
+    x_graph.push(i/res);
+  }
+  return x_graph;
+}
+
+function getBeta(x, alpha, beta){
+  var betaData = x.map(function(ele, ind, arr){
+    return {x: ele, y: beta_pdf_each(ele, alpha, beta)};
+  });
+  return betaData;
+}
+
+prior_data = getBeta(getDomain(), 2, 2);
 
 /* configure of svg element */
 var svg = d3.select("svg")
@@ -35,9 +40,13 @@ var g = svg.append('g')
     .attr('transform', translate(margin.left, margin.top));
 
 /* initilaization */
+
 setScale();
 initializePlot();
 initializeAxis();
+
+svg.on("mousedown", handleMouseDown);
+
 
 /* plot initialize graph */
 function initializePlot(){
@@ -50,6 +59,38 @@ function initializePlot(){
       .attr('r', 3);
 }
 
+function updatePlot(newData){
+  g.selectAll('circle')
+      .data(newData)
+      .attr('cx', function(d){return scale.x(d.x)})
+      .attr('cy', function(d){return scale.y(d.y)})
+      .attr('r', 3);
+}
+
+//TODO alpha, betaの値を表示
+function handleMouseDown(d, i){
+  var div_alpha = d3.select(".alpha");
+  var div_beta = d3.select(".beta");
+  var w = d3.select(this)
+      .on("mousemove", mousemove)
+      .on("mouseup", mouseup);
+  d3.event.preventDefault();
+
+  function mousemove(){
+    var coords = d3.mouse(this);
+    var newAlpha = 10*coords[0]/svgWidth;
+    var newBeta = 10*coords[1]/svgHeight;
+    var newData = getBeta(domain, newAlpha, newBeta);
+    div_alpha.text(newAlpha);
+    div_beta.text(newBeta);
+    updatePlot(newData);
+  }
+
+  function mouseup(){
+
+  }
+}
+
 function setScale(){
   var xRangeMin = 0.;
   var xRangeMax = 1.;
@@ -58,7 +99,7 @@ function setScale(){
       .range([0, width]);
 
   var yRangeMin = 0.;
-  var yRangeMax = 10.;
+  var yRangeMax = 5.;
   scale.y = d3.scaleLinear()
       .domain([yRangeMin, yRangeMax])
       .range([height, 0]);

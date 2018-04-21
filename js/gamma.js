@@ -1,6 +1,6 @@
 // https://github.com/substack/gamma.js
 
-var g = 7;
+var gg = 7; //g to gg (because of name collision)
 var p = [
     0.99999999999980993,
     676.5203681218851,
@@ -50,10 +50,10 @@ function gamma (z) {
     else {
         z -= 1;
         var x = p[0];
-        for (var i = 1; i < g + 2; i++) {
+        for (var i = 1; i < gg + 2; i++) {
             x += p[i] / (z + i);
         }
-        var t = z + g + 0.5;
+        var t = z + gg + 0.5;
 
         return Math.sqrt(2 * Math.PI) *
             Math.pow(t, z + 0.5) *
