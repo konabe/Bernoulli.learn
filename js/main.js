@@ -1,7 +1,10 @@
 var prior_data;
+var posterior_data;
+var likelihood_data;
 var domain = getDomain();
-
-var input_data = [1, 0, 0, 1, 0];
+var alpha = 2;
+var beta = 2;
+var input_data = [];
 
 /* d3.js setting */
 svgWidth = 800;
@@ -23,8 +26,17 @@ function getDomain(){
   return x_graph;
 }
 
-function getPostParamters(){
-
+function getPostParamters(input, prior_alpha, prior_beta){
+  var sum  = function(arr) {
+    if(arr.length == 0){
+      return 0;
+    }
+    return arr.reduce(function(prev, current, i, arr) {
+        return prev+current;
+    });
+  };
+  var sum_input = sum(input);
+  return {alpha: sum_input + prior_alpha, beta: input.length - sum_input + prior_beta};
 }
 
 function getBeta(x, alpha, beta){
@@ -34,7 +46,17 @@ function getBeta(x, alpha, beta){
   return betaData;
 }
 
-prior_data = getBeta(getDomain(), 2, 2);
+function getZeros(x){
+  var zeros = x.map(function(ele, ind, arr){
+    return {x: ele, y: 0.0};
+  });
+  return zeros;
+}
+
+prior_data = getBeta(domain, alpha, beta);
+post_param = getPostParamters(input_data, alpha, beta);
+posterior_data = getBeta(domain, post_param.alpha, post_param.beta);
+likelihood_data = getZeros(domain);
 
 /* configure of svg element */
 var svg = d3.select("svg")
@@ -48,6 +70,9 @@ var priorG = svg.append('g')
 var postG = svg.append('g')
     .attr('transform', translate(margin.left, margin.top));
 
+var likelihoodG = svg.append('g')
+    .attr('transform', translate(margin.left, margin.top));
+
 /* initilaization */
 
 setScale();
@@ -55,7 +80,7 @@ initializePlot();
 initializeAxis();
 
 svg.on("mousedown", handleMouseDown);
-
+d3.select("body").on("keydown", handleKeyDown);
 
 /* plot initialize graph */
 function initializePlot(){
@@ -65,15 +90,43 @@ function initializePlot(){
       .append('circle')
       .attr('cx', function(d){return scale.x(d.x)})
       .attr('cy', function(d){return scale.y(d.y)})
-      .attr('r', 3);
-}
+      .attr('r', 3)
+      .attr('fill', 'red');
 
-function updatePlot(newData){
-  priorG.selectAll('circle')
-      .data(newData)
+  postG.selectAll('circle')
+      .data(posterior_data)
+      .enter()
+      .append('circle')
       .attr('cx', function(d){return scale.x(d.x)})
       .attr('cy', function(d){return scale.y(d.y)})
-      .attr('r', 3);
+      .attr('r', 3)
+      .attr('fill', 'blue');
+
+  likelihoodG.selectAll('circle')
+      .data(likelihood_data)
+      .enter()
+      .append('circle')
+      .attr('cx', function(d){return scale.x(d.x)})
+      .attr('cy', function(d){return scale.y(d.y)})
+      .attr('r', 2)
+      .attr('fill', 'green');
+}
+
+function updatePlot(){
+  priorG.selectAll('circle')
+      .data(prior_data)
+      .attr('cx', function(d){return scale.x(d.x)})
+      .attr('cy', function(d){return scale.y(d.y)})
+
+  postG.selectAll('circle')
+      .data(posterior_data)
+      .attr('cx', function(d){return scale.x(d.x)})
+      .attr('cy', function(d){return scale.y(d.y)})
+
+  likelihoodG.selectAll('circle')
+      .data(likelihood_data)
+      .attr('cx', function(d){return scale.x(d.x)})
+      .attr('cy', function(d){return scale.y(d.y)})
 }
 
 //TODO alpha, betaの値を表示
@@ -87,17 +140,50 @@ function handleMouseDown(d, i){
 
   function mousemove(){
     var coords = d3.mouse(this);
-    var newAlpha = 10*coords[0]/svgWidth;
-    var newBeta = 10*coords[1]/svgHeight;
-    var newData = getBeta(domain, newAlpha, newBeta);
-    div_alpha.text(newAlpha);
-    div_beta.text(newBeta);
-    updatePlot(newData);
+    alpha = 10*coords[0]/svgWidth;
+    beta = 10*coords[1]/svgHeight;
+    prior_data = getBeta(domain, alpha, beta);
+    post_param = getPostParamters(input_data, alpha, beta);
+    posterior_data = getBeta(getDomain(), post_param.alpha, post_param.beta);
+    updatePlot();
   }
 
   function mouseup(){
     w.on("mousemove", null).on("mouseup", null);
   }
+}
+
+function handleKeyDown(){
+  switch (d3.event.keyCode) {
+    case 65: //A -> push 0
+      if(input_data.length < 100){
+        input_data.push(0);
+      }
+      break;
+    case 68: //D -> push 1
+      if(input_data.length < 100){
+        input_data.push(1);
+      }
+      break;
+    case 83: // S -> pop
+      if(input_data.length > 0){
+        input_data.pop();
+      }
+      break;
+    case 67: // C -> delete
+      input_data = [];
+      break;
+    default:
+      break;
+  }
+  post_param = getPostParamters(input_data, alpha, beta);
+  posterior_data = getBeta(domain, post_param.alpha, post_param.beta);
+  if(input_data.length != 0){
+    likelihood_data = getBeta(domain, post_param.alpha-alpha+1, post_param.beta-beta+1);
+  }else{
+    likelihood_data = getZeros(domain);
+  }
+  updatePlot();
 }
 
 function setScale(){
@@ -108,7 +194,7 @@ function setScale(){
       .range([0, width]);
 
   var yRangeMin = 0.;
-  var yRangeMax = 5.;
+  var yRangeMax = 10.;
   scale.y = d3.scaleLinear()
       .domain([yRangeMin, yRangeMax])
       .range([height, 0]);
