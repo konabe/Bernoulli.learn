@@ -1,6 +1,8 @@
 var prior_data;
 var domain = getDomain();
 
+var input_data = [1, 0, 0, 1, 0];
+
 /* d3.js setting */
 svgWidth = 800;
 svgHeight = 600;
@@ -21,6 +23,10 @@ function getDomain(){
   return x_graph;
 }
 
+function getPostParamters(){
+
+}
+
 function getBeta(x, alpha, beta){
   var betaData = x.map(function(ele, ind, arr){
     return {x: ele, y: beta_pdf_each(ele, alpha, beta)};
@@ -36,7 +42,10 @@ var svg = d3.select("svg")
     .attr('height', svgHeight);
 
 /* configure of graph area */
-var g = svg.append('g')
+var priorG = svg.append('g')
+    .attr('transform', translate(margin.left, margin.top));
+
+var postG = svg.append('g')
     .attr('transform', translate(margin.left, margin.top));
 
 /* initilaization */
@@ -50,7 +59,7 @@ svg.on("mousedown", handleMouseDown);
 
 /* plot initialize graph */
 function initializePlot(){
-  var plot = g.selectAll('circle')
+  priorG.selectAll('circle')
       .data(prior_data)
       .enter()
       .append('circle')
@@ -60,7 +69,7 @@ function initializePlot(){
 }
 
 function updatePlot(newData){
-  g.selectAll('circle')
+  priorG.selectAll('circle')
       .data(newData)
       .attr('cx', function(d){return scale.x(d.x)})
       .attr('cy', function(d){return scale.y(d.y)})
@@ -87,7 +96,7 @@ function handleMouseDown(d, i){
   }
 
   function mouseup(){
-
+    w.on("mousemove", null).on("mouseup", null);
   }
 }
 
