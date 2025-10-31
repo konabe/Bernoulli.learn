@@ -7,11 +7,58 @@
   svg {
       border: solid 1px gray;
   }
+  .instructions {
+    font-family: sans-serif;
+    max-width: 900px;
+    margin: 12px 0;
+    padding: 8px 12px;
+    background: #f8f8f8;
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
+  }
+  .instructions h2{ margin:6px 0; font-size:16px }
+  .instructions p, .instructions li{ font-size:14px; line-height:1.4 }
+  .data-area { margin: 8px 0; font-family: sans-serif }
+  #data-strip { margin-top:6px; }
+  .data-item { display:inline-block; width:12px; height:18px; margin:2px; border-radius:2px; }
   </style>
   <script src="https://d3js.org/d3.v5.min.js"></script>
 </head>
 <body>
+  <div>
+    <span>alpha: </span><span class="alpha"></span>
+    <span style="margin-left:12px">beta: </span><span class="beta"></span>
+  </div>
+  <div class="data-area">
+    <div>追加データ (<span id="data-count">0</span>)</div>
+    <div id="data-strip"></div>
+  </div>
   <svg></svg>
+  <div class="instructions" id="instructions">
+    <h2>操作方法</h2>
+    <ul>
+      <li>グラフ領域（下のSVG）をマウスでドラッグ：alpha（横位置）とbeta（縦位置）を同時に変更します。値は左上から右下でおおよそ0〜10の範囲になります。</li>
+      <li>キーボード操作:
+        <ul>
+          <li><strong>A</strong>：0 をデータに追加</li>
+          <li><strong>D</strong>：1 をデータに追加</li>
+          <li><strong>S</strong>：最後のデータを削除（pop）</li>
+          <li><strong>C</strong>：データをすべてクリア</li>
+        </ul>
+      </li>
+      <li>画面上部に現在の <code>alpha</code> と <code>beta</code> が表示されています（小数第2位まで）。</li>
+    </ul>
+
+    <h2>説明</h2>
+    <p>このデモはベータ分布の事前分布（prior）、事後分布（posterior）、および尤度（likelihood）を視覚化します。</p>
+    <ul>
+      <li>赤：事前分布（prior）</li>
+      <li>青：事後分布（posterior）</li>
+      <li>緑：尤度（likelihood）</li>
+    </ul>
+    <p>alpha と beta はベータ分布のパラメータです。マウス操作でこれらを調整すると事前分布と事後分布が更新されます。データ（0/1）を追加すると事後分布が変化し、尤度が表示されます。</p>
+    <p>注意：alpha/beta のスケールはコード中で <code>alpha = 10 * x / svgWidth</code> のように定義されています（おおよその目安）。</p>
+  </div>
   <script src="./js/gamma.js"></script>
   <script src="./js/math.js"></script>
   <script src="./js/main.js"></script>

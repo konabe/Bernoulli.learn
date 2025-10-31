@@ -80,7 +80,9 @@ initializePlot();
 initializeAxis();
 
 svg.on("mousedown", handleMouseDown);
+updateAlphaBetaDisplay();
 d3.select("body").on("keydown", handleKeyDown);
+updateDataDisplay();
 
 /* plot initialize graph */
 function initializePlot(){
@@ -130,9 +132,12 @@ function updatePlot(){
 }
 
 //TODO alpha, betaの値を表示
+function updateAlphaBetaDisplay() {
+  d3.select(".alpha").text(alpha.toFixed(2));
+  d3.select(".beta").text(beta.toFixed(2));
+}
+
 function handleMouseDown(d, i){
-  var div_alpha = d3.select(".alpha");
-  var div_beta = d3.select(".beta");
   var w = d3.select(this)
       .on("mousemove", mousemove)
       .on("mouseup", mouseup);
@@ -146,6 +151,7 @@ function handleMouseDown(d, i){
     post_param = getPostParamters(input_data, alpha, beta);
     posterior_data = getBeta(getDomain(), post_param.alpha, post_param.beta);
     updatePlot();
+    updateAlphaBetaDisplay();
   }
 
   function mouseup(){
@@ -184,6 +190,35 @@ function handleKeyDown(){
     likelihood_data = getZeros(domain);
   }
   updatePlot();
+  updateAlphaBetaDisplay();
+  updateDataDisplay();
+}
+
+function updateDataDisplay(){
+  // container for visualizing input_data as colored boxes
+  var container = d3.select('#data-strip');
+
+  // bind data
+  var items = container.selectAll('.data-item')
+      .data(input_data);
+
+  // remove old
+  items.exit().remove();
+
+  // add new
+  items.enter()
+      .append('div')
+      .attr('class', 'data-item')
+      .style('background', function(d){ return d === 1 ? '#fd8d3c' : '#6baed6'; })
+      .attr('title', function(d, i){ return i + ': ' + d; });
+
+  // update existing
+  container.selectAll('.data-item')
+      .style('background', function(d){ return d === 1 ? '#fd8d3c' : '#6baed6'; })
+      .attr('title', function(d, i){ return i + ': ' + d; });
+
+  // update count
+  d3.select('#data-count').text(input_data.length);
 }
 
 function setScale(){
